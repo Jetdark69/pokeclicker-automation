@@ -197,7 +197,7 @@ class AutomationUnderground
      *
      * The following strategy is used:
      *   - Use a survey if available, unless all items were already found
-     *   - Use the batterie discharge if available
+     *   - Use the battery discharge if available
      *   - Use a bomb if available, unless all items were already found
      *   - Use a bomb regardless, if its durability is maxed out, unless the tool reached infinite use
      *   - Tries to use the best possible tool to:

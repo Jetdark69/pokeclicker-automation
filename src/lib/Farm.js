@@ -13,7 +13,8 @@ class AutomationFarm
                           HarvestLate: "Farming-HarvestLate",
                           OakItemLoadoutUpdate: "Farming-OakItemLoadoutUpdate",
                           SelectedBerryToPlant: "Farming-SelectedBerryToPlant",
-                          UseRichMulch: "Farming-UseRichMulch"
+                          UseRichMulch: "Farming-UseRichMulch",
+                          UseShovel: "Farming-UseShovel"
                       };
 
     // The berry type forced to plant by other features
@@ -31,6 +32,7 @@ class AutomationFarm
             Automation.Utils.LocalStorage.setDefaultValue(this.Settings.AutoCatchWanderers, true);
             Automation.Utils.LocalStorage.setDefaultValue(this.Settings.HarvestLate, false);
             Automation.Utils.LocalStorage.setDefaultValue(this.Settings.UseRichMulch, false);
+            Automation.Utils.LocalStorage.setDefaultValue(this.Settings.UseShovel, false);
             Automation.Utils.LocalStorage.setDefaultValue(this.Settings.SelectedBerryToPlant, BerryType.Cheri);
 
             this.__internal__buildMenu();
@@ -214,6 +216,15 @@ class AutomationFarm
         Automation.Menu.addLabeledAdvancedSettingsToggleButton("Apply rich mulch before harvesting",
                                                                this.Settings.UseRichMulch,
                                                                richMulchBeforeHarvestTooltip,
+                                                               farmingSettingPanel);
+
+        // Use shovels to remove unwanted berries button
+        const useShovelTooltip = "Enabling this setting will use shovels to remove unwanted berries from plots."
+                               + Automation.Menu.TooltipSeparator
+                               + "Shovels will not be used if their is no available stock.";
+        Automation.Menu.addLabeledAdvancedSettingsToggleButton("Use shovels to remove unwanted berries",
+                                                               this.Settings.UseShovel,
+                                                               useShovelTooltip,
                                                                farmingSettingPanel);
 
         // Disable the harvest late feature if the Focus on unlocks is enabled
@@ -416,6 +427,16 @@ class AutomationFarm
 
         // Otherwise, fallback to planting berries
         const berryToPlant = this.ForcePlantBerriesAsked ?? parseInt(Automation.Utils.LocalStorage.getValue(this.Settings.SelectedBerryToPlant));
+
+        // Remove any unwanted berry, if enabled
+        if (Automation.Utils.LocalStorage.getValue(this.Settings.UseShovel) === "true")
+        {
+            for (const index of App.game.farming.plotList.keys())
+            {
+                this.__internal__removeAnyUnwantedBerry(index, berryToPlant, true);
+            }
+        }
+
         this.__internal__plantAllBerries(berryToPlant);
 
         if (this.__internal__currentStrategy !== null)
@@ -2290,10 +2311,13 @@ class AutomationFarm
      *
      * @param {number} index: The index of the plot to clean
      * @param expectedBerryType: The expected berry type, any other type would be cleaned
+     * @param {boolean} canUseShovel: If set to true, the shovel will be used to remove the berry if it can't be harvested
      *
-     * @returns False if the plot still contains an unwanted berry, true otherwise
+     * @returns False if the plot still contains a berry, true otherwise
      */
-    static __internal__removeAnyUnwantedBerry(index, expectedBerryType)
+    static __internal__removeAnyUnwantedBerry(index,
+                                              expectedBerryType,
+                                              canUseShovel = (Automation.Utils.LocalStorage.getValue(this.Settings.UseShovel) === "true"))
     {
         const plot = App.game.farming.plotList[index];
 
@@ -2302,22 +2326,30 @@ class AutomationFarm
             return false;
         }
 
-        if (!plot.isEmpty())
+        // If the plot is empty, there is nothing to do
+        if (plot.isEmpty())
         {
-            // TODO (02/08/2022): We should add an option to use shovels in such case
-            if ((plot.berry !== expectedBerryType) && (plot.stage() == PlotStage.Berry))
-            {
-                this.__internal__harvestCount++;
-                App.game.farming.harvest(index);
-                return true;
-            }
-            else
-            {
-                return false
-            }
+            return true;
         }
 
-        return true;
+        // Only consider unwanted berries
+        if (plot.berry === expectedBerryType)
+        {
+            return false;
+        }
+
+        if (plot.stage() == PlotStage.Berry)
+        {
+            this.__internal__harvestCount++;
+            App.game.farming.harvest(index);
+        }
+        // Try to use the shovel if enabled
+        else if (canUseShovel)
+        {
+            App.game.farming.shovel(index);
+        }
+
+        return plot.isEmpty()
     }
 
     /**
@@ -2348,10 +2380,11 @@ class AutomationFarm
         // Register the callback
         step.action = function()
         {
+            const canUseShovel = (Automation.Utils.LocalStorage.getValue(this.Settings.UseShovel) === "true");
             // Remove any mutation that might have occured, as soon as possible
             for (const [ index, berryType ] of config.entries())
             {
-                this.__internal__removeAnyUnwantedBerry(index, berryType);
+                this.__internal__removeAnyUnwantedBerry(index, berryType, canUseShovel);
             }
 
             // Compute Bloom target time
