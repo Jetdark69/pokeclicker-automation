@@ -105,7 +105,7 @@ class AutomationFocusQuests
      */
     static __internal__buildAdvancedSettings(parent)
     {
-        const tooltip = "Skipping quests can be cost-heavy"
+        const tooltip = "Skipping quests can be cost-heavy";
         const descriptionElem = document.createElement("span");
         descriptionElem.textContent = "Choose which quest should be performed, or skipped ⚠️";
         descriptionElem.classList.add("hasAutomationTooltip");

@@ -514,7 +514,7 @@ class AutomationSafari
                 && (this.__internal__safariMovesCost[y][x] === cost);
         }.bind(this);
 
-        // Stop at cost = 1, which is the till right next to the player
+        // Stop at cost = 1, which is the tile right next to the player
         while (cost > 1)
         {
             --cost;
