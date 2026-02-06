@@ -13,10 +13,9 @@ class AutomationShiny
     {
         if (initStep == Automation.InitSteps.BuildMenu)
         {
+            Automation.Utils.LocalStorage.setDefaultValue(this.Settings.FeatureEnabled, false);
             Automation.Utils.LocalStorage.setDefaultValue(this.Settings.UseMasterball, true);
             Automation.Utils.LocalStorage.setDefaultValue(this.Settings.AutoAdvanceRoutes, true);
-
-            this.__internal__buildMenu();
         }
         else if (initStep == Automation.InitSteps.Finalize)
         {
@@ -66,40 +65,6 @@ class AutomationShiny
     static __internal__loop = null;
     static __internal__filterActive = false;
     static __internal__lastAutoAdvanceAt = 0;
-
-    static __internal__buildMenu()
-    {
-        const container = document.createElement("div");
-
-        const tooltip = "Auto-catch shiny encounters with a Masterball when available\n"
-                      + "If no Masterball remains, keep the current ball selection\n"
-                      + Automation.Menu.TooltipSeparator
-                      + "Optional auto-advance when a route shiny-dex is complete";
-        const button = Automation.Menu.addAutomationButton("Shiny hunt", this.Settings.FeatureEnabled, tooltip, container);
-        button.addEventListener("click", this.toggleShinyHunt.bind(this), false);
-
-        Automation.Menu.addSeparator(container);
-        Automation.Menu.AutomationButtonsDiv.appendChild(container);
-
-        const settingsPanel = Automation.Menu.addSettingPanel(button.parentElement.parentElement);
-        const titleDiv = Automation.Menu.createTitleElement("Shiny hunt advanced settings");
-        titleDiv.style.marginBottom = "10px";
-        settingsPanel.appendChild(titleDiv);
-
-        Automation.Menu.addLabeledAdvancedSettingsToggleButton(
-            "Use Masterball when available",
-            this.Settings.UseMasterball,
-            "",
-            settingsPanel
-        );
-
-        Automation.Menu.addLabeledAdvancedSettingsToggleButton(
-            "Auto-advance route when all shinies are caught",
-            this.Settings.AutoAdvanceRoutes,
-            "",
-            settingsPanel
-        );
-    }
 
     static __internal__tick()
     {
