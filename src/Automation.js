@@ -16,6 +16,7 @@ class Automation
     static Hatchery = AutomationHatchery;
     static Items = AutomationItems;
     static Notifications = AutomationNotifications;
+    static Shiny = AutomationShiny;
     static Menu = AutomationMenu;
     static Shop = AutomationShop;
     static Trivia = AutomationTrivia;
@@ -72,6 +73,7 @@ class Automation
                     this.Shop.initialize(initStep);
                     this.Items.initialize(initStep);
                     this.Notifications.initialize(initStep);
+                    this.Shiny.initialize(initStep);
 
                     // 'Trivia' panel
                     this.Trivia.initialize(initStep);
