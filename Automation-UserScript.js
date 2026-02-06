@@ -9,9 +9,13 @@
 // @grant        none
 // ==/UserScript==
 
-// By default, the script is set to take the latest version available
+// By default, the script loads the latest version from the configured repository.
+// If you're using a fork, update the owner/name below.
+var repositoryOwner = "Jetdark69";
+var repositoryName = "pokeclicker-automation";
+
 // It could be preferable to set this to a label or a commit instead,
-// if you want to fix a set version of the script
+// if you want to pin a specific version of the script.
 var releaseLabel = "master";
 
 // Set this to true if you want no feature to be enabled by default
@@ -20,7 +24,10 @@ var disableFeaturesByDefault = false;
 // Set this to true if you want no setting to be enabled by default
 var disableSettingsByDefault = false;
 
-var pokeclickerAutomationReleaseUrl = "https://raw.githubusercontent.com/Farigh/pokeclicker-automation/" + releaseLabel + "/";
+var pokeclickerAutomationReleaseUrl = "https://raw.githubusercontent.com/"
+                                   + repositoryOwner + "/"
+                                   + repositoryName + "/"
+                                   + releaseLabel + "/";
 
 // Github only serves plain-text so we can't load it as a script object directly
 let xmlhttp = new XMLHttpRequest();
