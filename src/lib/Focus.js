@@ -195,7 +195,7 @@ class AutomationFocus
             if (pokeballItem.currency != GameConstants.Currency.money)
             {
                 Automation.Menu.forceAutomationState(this.Settings.FeatureEnabled, false);
-                Automation.Notifications.sendWarningNotif("No more pokéball of the selected type are available", "Focus");
+                Automation.Notifications.sendWarningNotif("No more pokＣall of the selected type are available", "Focus");
                 return false;
             }
 
@@ -335,10 +335,10 @@ class AutomationFocus
         this.Achievements.__buildAdvancedSettings(achievementsTabContainer);
 
         /***************************\
-        |*  Pokérus Cure settings  *|
+        |*  PokＳus Cure settings  *|
         \***************************/
 
-        const pokerusCureTabContainer = Automation.Menu.addTabElement(focusSettingPanel, "Pokérus Cure", focusSettingsTabsGroup);
+        const pokerusCureTabContainer = Automation.Menu.addTabElement(focusSettingPanel, "PokＳus Cure", focusSettingsTabsGroup);
         this.PokerusCure.__buildAdvancedSettings(pokerusCureTabContainer);
     }
 
@@ -349,11 +349,11 @@ class AutomationFocus
      */
     static __internal__buildBallSelectionAdvancedSettings(generalTabContainer)
     {
-        const disclaimer = Automation.Menu.TooltipSeparator + "⚠️ Equipping higher pokéballs can be cost-heavy during early game";
+        const disclaimer = Automation.Menu.TooltipSeparator + "?? Equipping higher pokＣalls can be cost-heavy during early game";
 
         // Pokeball to use for catching
         const pokeballToUseTooltip = "Defines which pokeball will be equipped to catch\n"
-                                   + "already caught pokémon, when needed"
+                                   + "already caught pokＮon, when needed"
                                    + disclaimer;
 
         this.__internal__setBallToUseToCatchDefaultValue();
@@ -467,6 +467,17 @@ class AutomationFocus
                         Automation.Utils.Pokeball.disableAutomationFilter();
                     }.bind(this),
                 refreshRateAsMs: 3000 // Refresh every 3s
+            });
+
+        this.__internal__functionalities.push(
+            {
+                id: "ShinyHunt",
+                name: "Shiny hunt",
+                tooltip: "Auto-catch shiny encounters (Masterball if available)\n"
+                       + "Auto-advance to next route when shiny-dex is complete",
+                run: function() { Automation.Shiny.toggleShinyHunt(true); },
+                stop: function() { Automation.Shiny.toggleShinyHunt(false); },
+                refreshRateAsMs: this.__noFunctionalityRefresh
             });
 
         this.Quests.__registerFunctionalities(this.__internal__functionalities);
