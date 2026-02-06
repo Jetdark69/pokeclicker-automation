@@ -41,6 +41,9 @@ class AutomationShiny
             {
                 this.__internal__loop = setInterval(this.__internal__tick.bind(this), 500);
             }
+
+            // Move immediately to the earliest available route with missing shiny
+            this.__internal__moveToFirstUncompletedShinyRoute();
         }
         else
         {
@@ -141,7 +144,7 @@ class AutomationShiny
             return;
         }
 
-        const nextRoute = this.__internal__findNextRouteInRegion(player.route, player.region);
+        const nextRoute = this.__internal__findNextUncompletedShinyRoute(player.route, player.region);
         if (!nextRoute)
         {
             return;
@@ -166,20 +169,85 @@ class AutomationShiny
         });
     }
 
-    static __internal__findNextRouteInRegion(route, region)
+    static __internal__getOrderedRoutes()
     {
-        const routes = Routes.regionRoutes.filter(r => r.region === region);
-        const currentIndex = routes.findIndex(r => r.number === route);
-
-        for (let i = currentIndex + 1; i < routes.length; i++)
-        {
-            if (routes[i].isUnlocked())
+        const routes = [...Routes.regionRoutes];
+        routes.sort((a, b) =>
             {
-                return routes[i];
+                if (a.region !== b.region) return a.region - b.region;
+                return a.number - b.number;
+            });
+        return routes;
+    }
+
+    static __internal__findNextUncompletedShinyRoute(currentRoute, currentRegion)
+    {
+        const routes = this.__internal__getOrderedRoutes();
+        let foundCurrent = false;
+
+        for (const route of routes)
+        {
+            if (!foundCurrent)
+            {
+                if ((route.region === currentRegion) && (route.number === currentRoute))
+                {
+                    foundCurrent = true;
+                }
+                continue;
+            }
+
+            if (!Automation.Utils.Route.canMoveToRoute(route.number, route.region, route))
+            {
+                continue;
+            }
+
+            if (Automation.Utils.Route.isInMagikarpJumpIsland(route.region, route.subRegion))
+            {
+                continue;
+            }
+
+            if (!this.__internal__isRouteShinyComplete(route.number, route.region))
+            {
+                return route;
+            }
+        }
+
+        // If nothing found after current route, wrap from the beginning
+        for (const route of routes)
+        {
+            if (!Automation.Utils.Route.canMoveToRoute(route.number, route.region, route))
+            {
+                continue;
+            }
+
+            if (Automation.Utils.Route.isInMagikarpJumpIsland(route.region, route.subRegion))
+            {
+                continue;
+            }
+
+            if (!this.__internal__isRouteShinyComplete(route.number, route.region))
+            {
+                return route;
             }
         }
 
         return null;
+    }
+
+    static __internal__moveToFirstUncompletedShinyRoute()
+    {
+        if (Automation.Utils.isInInstanceState())
+        {
+            return;
+        }
+
+        const targetRoute = this.__internal__findNextUncompletedShinyRoute(player.route, player.region);
+        if (!targetRoute)
+        {
+            return;
+        }
+
+        Automation.Utils.Route.moveToRoute(targetRoute.number, targetRoute.region);
     }
 
     static __internal__getMasterballCount()
