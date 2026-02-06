@@ -151,7 +151,7 @@ class AutomationShiny
         }
 
         this.__internal__lastAutoAdvanceAt = now;
-        Automation.Utils.Route.moveToRoute(nextRoute.number, nextRoute.region);
+        this.__internal__moveToRouteWithRegionChange(nextRoute);
     }
 
     static __internal__isRouteShinyComplete(route, region)
@@ -247,7 +247,26 @@ class AutomationShiny
             return;
         }
 
-        Automation.Utils.Route.moveToRoute(targetRoute.number, targetRoute.region);
+        this.__internal__moveToRouteWithRegionChange(targetRoute);
+    }
+
+    static __internal__moveToRouteWithRegionChange(route)
+    {
+        if (!route)
+        {
+            return;
+        }
+
+        if (route.region !== player.region)
+        {
+            const dockTownName = GameConstants.DockTowns[route.region];
+            if (dockTownName)
+            {
+                Automation.Utils.Route.moveToTown(dockTownName);
+            }
+        }
+
+        Automation.Utils.Route.moveToRoute(route.number, route.region);
     }
 
     static __internal__getMasterballCount()
