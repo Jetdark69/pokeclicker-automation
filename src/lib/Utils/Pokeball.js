@@ -93,6 +93,36 @@ class AutomationUtilsPokeball
         this.__internal__automationFilter.options.pokemonType.observableValue(pokemonType);
     }
 
+    /**
+     * @brief Sets the pokeball filter to catch only shiny pokemon
+     *
+     * @param pokeballType: The pokeball type to use
+     * @param includeAlreadyCaught: Already caught shinies will be considered as well
+     *
+     * @returns True if the shiny filter was applied, false otherwise
+     */
+    static catchOnlyShinyWith(pokeballType, includeAlreadyCaught = false)
+    {
+        this.__internal__resetFilter(pokeballType);
+
+        if ((typeof pokeballFilterOptions === "undefined") || !pokeballFilterOptions.shiny)
+        {
+            return false;
+        }
+
+        this.__internal__automationFilter.options.shiny = pokeballFilterOptions.shiny.createSetting();
+        this.__internal__automationFilter.options.shiny.observableValue(true);
+
+        if (!includeAlreadyCaught && pokeballFilterOptions.caughtShiny)
+        {
+            this.__internal__automationFilter.options.caughtShiny = pokeballFilterOptions.caughtShiny.createSetting();
+            this.__internal__automationFilter.options.caughtShiny.observableValue(false);
+        }
+
+        this.enableAutomationFilter();
+        return true;
+    }
+
     /*********************************************************************\
     |***    Internal members, should never be used by other classes    ***|
     \*********************************************************************/
