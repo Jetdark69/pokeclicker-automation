@@ -163,22 +163,22 @@ class AutomationShiny
 
         shinySettingPanel.appendChild(document.createElement("br"));
 
-        const safariBallTooltip = "PokÃ©ball used while farming safari currency";
+        const safariBallTooltip = "PokÃ©ball used while farming quest points for Safari entry";
         shinySettingPanel.appendChild(
             Automation.Menu.addPokeballList(this.Settings.SafariCurrencyFarmBall,
-                                            "Safari currency farm ball",
+                                            "Quest point farm ball",
                                             safariBallTooltip));
 
         const safariFallbackTooltip = "Fallback pokÃ©ball used if the main ball is unavailable";
         shinySettingPanel.appendChild(
             Automation.Menu.addPokeballList(this.Settings.SafariCurrencyFarmFallbackBall,
-                                            "Safari currency fallback ball",
+                                            "Quest point fallback ball",
                                             safariFallbackTooltip));
 
         shinySettingPanel.appendChild(
             this.__internal__buildRouteModeDropdown(this.Settings.SafariCurrencyFarmRouteMode,
-                                                    "Safari currency farm route",
-                                                    "Select how routes are chosen while farming safari currency"));
+                                                    "Quest point farm route",
+                                                    "Select how routes are chosen while farming quest points for Safari"));
     }
 
     static __internal__buildRouteModeDropdown(settingId, label, tooltip)
@@ -234,6 +234,11 @@ class AutomationShiny
 
     static __internal__handleShinyEncounter()
     {
+        if (App.game.gameState === GameConstants.GameState.safari)
+        {
+            return;
+        }
+
         const enemy = this.__internal__getCurrentEnemyPokemon();
         const isShiny = !!enemy && enemy.shiny === true;
 
@@ -707,6 +712,11 @@ class AutomationShiny
 
     static __internal__canAffordSafari()
     {
+        if (typeof Safari !== "undefined" && typeof Safari.canPay === "function")
+        {
+            return Safari.canPay();
+        }
+
         const safariCurrency = this.__internal__getSafariCurrency();
         if (!safariCurrency)
         {
@@ -718,6 +728,21 @@ class AutomationShiny
 
     static __internal__getSafariCurrency()
     {
+        if (GameConstants?.Currency?.questPoint !== undefined)
+        {
+            return GameConstants.Currency.questPoint;
+        }
+
+        if (GameConstants?.Currency?.QuestPoint !== undefined)
+        {
+            return GameConstants.Currency.QuestPoint;
+        }
+
+        if (GameConstants?.Currency?.QuestPoints !== undefined)
+        {
+            return GameConstants.Currency.QuestPoints;
+        }
+
         if (GameConstants?.Currency?.safariTicket !== undefined)
         {
             return GameConstants.Currency.safariTicket;
