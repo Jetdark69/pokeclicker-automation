@@ -96,6 +96,7 @@ class AutomationShiny
 
     static __internal__loop = null;
     static __internal__filterActive = false;
+    static __internal__filterBallType = null;
     static __internal__lastAutoAdvanceAt = 0;
     static __internal__state = this.HuntStates.HUNT_ROUTE;
     static __internal__lastState = this.HuntStates.HUNT_ROUTE;
@@ -250,28 +251,26 @@ class AutomationShiny
             {
                 Automation.Utils.Pokeball.disableAutomationFilter();
                 this.__internal__filterActive = false;
+                this.__internal__filterBallType = null;
             }
             return;
         }
 
-        const useMasterball = (Automation.Utils.LocalStorage.getValue(this.Settings.UseMasterball) === "true");
-        if (!useMasterball)
+        const preferMasterball = (Automation.Utils.LocalStorage.getValue(this.Settings.UseMasterball) === "true");
+        const selectedBall = this.__internal__getBestAvailableShinyBall(preferMasterball);
+        if (selectedBall === null)
         {
             return;
         }
 
-        const masterballCount = this.__internal__getMasterballCount();
-        if (masterballCount <= 0)
+        // Re-apply if disabled or if the selected ball changed (for example, when one runs out).
+        if (!this.__internal__filterActive || (this.__internal__filterBallType !== selectedBall))
         {
-            return;
-        }
-
-        if (!this.__internal__filterActive)
-        {
-            const applied = Automation.Utils.Pokeball.catchOnlyShinyWith(GameConstants.Pokeball.Masterball, false);
+            const applied = Automation.Utils.Pokeball.catchOnlyShinyWith(selectedBall, false);
             if (applied)
             {
                 this.__internal__filterActive = true;
+                this.__internal__filterBallType = selectedBall;
             }
         }
     }
@@ -945,6 +944,59 @@ class AutomationShiny
         }
 
         return 0;
+    }
+
+    static __internal__getBestAvailableShinyBall(preferMasterball)
+    {
+        if (preferMasterball && (this.__internal__getMasterballCount() > 0))
+        {
+            return GameConstants.Pokeball.Masterball;
+        }
+
+        if (!App?.game?.pokeballs?.pokeballs)
+        {
+            return null;
+        }
+
+        let bestBall = null;
+        let bestBonus = Number.NEGATIVE_INFINITY;
+
+        for (const [ballIdRaw, ballData] of Object.entries(App.game.pokeballs.pokeballs))
+        {
+            const ballId = parseInt(ballIdRaw, 10);
+            if (Number.isNaN(ballId))
+            {
+                continue;
+            }
+
+            if ((ballId === GameConstants.Pokeball.None) || (ballId === GameConstants.Pokeball.Masterball))
+            {
+                continue;
+            }
+
+            if ((typeof ballData.unlocked === "function") && !ballData.unlocked())
+            {
+                continue;
+            }
+
+            const quantity = App.game.pokeballs.getBallQuantity(ballId);
+            if (quantity <= 0)
+            {
+                continue;
+            }
+
+            const catchBonus = (typeof App.game.pokeballs.getCatchBonus === "function")
+                ? App.game.pokeballs.getCatchBonus(ballId)
+                : ballId;
+
+            if ((catchBonus > bestBonus) || ((catchBonus === bestBonus) && ((bestBall === null) || (ballId > bestBall))))
+            {
+                bestBonus = catchBonus;
+                bestBall = ballId;
+            }
+        }
+
+        return bestBall;
     }
 
     static __internal__getCurrentEnemyPokemon()
