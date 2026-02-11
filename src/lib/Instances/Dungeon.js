@@ -100,6 +100,23 @@ class AutomationDungeon
         this.__internal__beforeNewRunCallBack = callback;
     }
 
+    /**
+     * @brief Sets the catch mode for the "Stop on Pokedex" feature
+     *
+     * @param {number} catchModeId: The catch mode id to use (see __internal__CatchModes)
+     */
+    static setCatchMode(catchModeId)
+    {
+        const nextMode = Object.entries(this.__internal__CatchModes).find(x => x[1].id == catchModeId);
+        if (!nextMode)
+        {
+            return;
+        }
+
+        this.__internal__currentCatchMode = nextMode[1];
+        this.__internal__updateCatchModeIndicator();
+    }
+
     /*********************************************************************\
     |***    Internal members, should never be used by other classes    ***|
     \*********************************************************************/
@@ -363,22 +380,31 @@ class AutomationDungeon
      */
     static __internal__toggleCatchStopMode()
     {
-        // Switch mode
-        this.__internal__currentCatchMode = (this.__internal__currentCatchMode == this.__internal__CatchModes.UncaughtShadowOrShiny)
-                                              ? this.__internal__CatchModes.Uncaught
-                                              : Object.entries(this.__internal__CatchModes).find(
-                                                    x => x[1].id == (this.__internal__currentCatchMode.id + 1))[1];
+        const nextCatchModeId = (this.__internal__currentCatchMode == this.__internal__CatchModes.UncaughtShadowOrShiny)
+            ? this.__internal__CatchModes.Uncaught.id
+            : (this.__internal__currentCatchMode.id + 1);
+        this.setCatchMode(nextCatchModeId);
+    }
 
-        // Update the image accordingly
+    /**
+     * @brief Updates the catch mode indicator image in the dungeon menu
+     */
+    static __internal__updateCatchModeIndicator()
+    {
+        if (!this.__internal__pokedexSwitch)
+        {
+            return;
+        }
+
         const image = (this.__internal__currentCatchMode.shiny) ? "Pokeball-shiny" : "Pokeball";
 
         const shadowImgStyle = "position: absolute; right: -4px; bottom: 1px; height: 25px;";
         const shadowImageBackground = (this.__internal__currentCatchMode.shadow)
-                                    ? `<img src="assets/images/status/shadow.svg" style="${shadowImgStyle} z-index: 1;">`
-                                    : "";
+            ? `<img src="assets/images/status/shadow.svg" style="${shadowImgStyle} z-index: 1;">`
+            : "";
         const shadowImageForground = (this.__internal__currentCatchMode.shadow)
-                                   ? `<img src="assets/images/status/shadow.svg" style="${shadowImgStyle} z-index: 3; opacity: 0.2;">`
-                                   : "";
+            ? `<img src="assets/images/status/shadow.svg" style="${shadowImgStyle} z-index: 3; opacity: 0.2;">`
+            : "";
 
         const pokeballImgStyle = `style="position: relative; height: 17px; z-index: 2;"`;
         this.__internal__pokedexSwitch.innerHTML =

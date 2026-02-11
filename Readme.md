@@ -11,30 +11,18 @@ For more details, please refer to the [wiki](../../wiki)
 
 For Pokeclicker Desktop app support, refer to [this repository](https://github.com/Farigh/pokeclicker-automation-desktop/releases)
 
-### Shiny hunt manual test plan (dungeon + safari fallback)
-
-1. **Dungeon hunt enabled + enough tokens**
-   - Enable `Shiny hunt` and `Enable dungeon shiny hunt`.
-   - Keep dungeon tokens above `Min dungeon tokens`.
-   - Expected: automation moves to preferred/auto dungeon and starts dungeon automation.
-
-2. **Dungeon tokens low -> farm -> resume**
-   - While dungeon hunt is active, reduce dungeon tokens below `Min dungeon tokens`.
-   - Expected: state switches to `FARM_DUNGEON_TOKENS`, moves to preferred/auto best route and equips Ultra Ball (or fallback ball).
-   - Increase tokens above `Resume dungeon tokens`.
-   - Expected: state switches back to `HUNT_DUNGEON` and dungeons resume.
-
-3. **Safari hunt enabled + low currency -> farm -> resume**
-   - Enable `Enable safari shiny hunt`.
-   - Keep safari currency below `Min safari currency`.
-   - Expected: state switches to `FARM_SAFARI_CURRENCY`, farms route with Ultra Ball/fallback.
-   - Raise safari currency above `Resume safari currency`.
-   - Expected: state switches back to `HUNT_SAFARI`.
-
-4. **No Ultra Balls available**
-   - Set `Use Ultra Balls while farming` on and set Ultra Ball quantity to 0.
-   - Expected: the first available ball from `Fallback ball priority` is used.
-
-5. **Dungeon/Safari modes disabled**
-   - Disable `Enable dungeon shiny hunt` and `Enable safari shiny hunt`.
-   - Expected: only route shiny hunt logic is used, no instance switching.
+## Manual Test Plan
+1. Load the userscript from your fork and refresh the game.
+2. Open `Automation -> Focus on` and confirm there is no `Shiny hunt` entry in the dropdown.
+3. Enable `Shiny Hunt` in the Automation panel and verify it switches between route/dungeon/safari behavior.
+4. Dungeon mode: go to a dungeon with missing shinies.
+5. Dungeon mode: confirm `Stop on Pokedex` is enabled in the dungeon panel.
+6. Dungeon mode: confirm the pokeball indicator is set to shiny completion.
+7. Dungeon mode: verify the automation repeats runs until the dungeon is shiny-complete, then moves to the next dungeon with missing shinies.
+8. Token farming fallback: set dungeon tokens below the required cost.
+9. Token farming fallback: verify it moves to the best token route and uses the configured ball/fallback.
+10. Safari currency fallback: reduce safari currency below entry cost.
+11. Safari currency fallback: verify it moves to the best route for safari currency or falls back to EXP if unavailable.
+12. Route hunt: ensure no dungeons have missing shinies.
+13. Route hunt: verify it moves to the earliest route with missing shinies and auto-advances on completion.
+14. Telemetry: set `localStorage["Shiny-DebugTelemetry"] = "true"` and verify console logs.

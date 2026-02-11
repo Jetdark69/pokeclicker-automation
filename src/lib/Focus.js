@@ -469,17 +469,6 @@ class AutomationFocus
                 refreshRateAsMs: 3000 // Refresh every 3s
             });
 
-        this.__internal__functionalities.push(
-            {
-                id: "ShinyHunt",
-                name: "Shiny hunt",
-                tooltip: "Auto-catch shiny encounters (Masterball if available)\n"
-                       + "Auto-advance to next route when shiny-dex is complete",
-                run: function() { Automation.Shiny.toggleShinyHunt(true); },
-                stop: function() { Automation.Shiny.toggleShinyHunt(false); },
-                refreshRateAsMs: this.__noFunctionalityRefresh
-            });
-
         this.Quests.__registerFunctionalities(this.__internal__functionalities);
         this.Achievements.__registerFunctionalities(this.__internal__functionalities);
         this.PokerusCure.__registerFunctionalities(this.__internal__functionalities);
