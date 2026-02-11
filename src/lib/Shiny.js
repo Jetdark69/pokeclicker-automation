@@ -78,6 +78,7 @@ class AutomationShiny
 
             this.__internal__currentDungeonTarget = null;
             this.__internal__currentSafariTarget = null;
+            this.__internal__disableQuestFocus();
         }
     }
 
@@ -97,6 +98,7 @@ class AutomationShiny
     static __internal__filterActive = false;
     static __internal__lastAutoAdvanceAt = 0;
     static __internal__state = this.HuntStates.HUNT_ROUTE;
+    static __internal__lastState = this.HuntStates.HUNT_ROUTE;
     static __internal__currentDungeonTarget = null;
     static __internal__currentSafariTarget = null;
     static __internal__container = null;
@@ -482,7 +484,7 @@ class AutomationShiny
         {
             if (this.__internal__canAffordCurrentDungeon())
             {
-                this.__internal__state = this.HuntStates.HUNT_DUNGEON;
+                this.__internal__setState(this.HuntStates.HUNT_DUNGEON);
             }
             return;
         }
@@ -491,7 +493,7 @@ class AutomationShiny
         {
             if (this.__internal__canAffordSafari())
             {
-                this.__internal__state = this.HuntStates.HUNT_SAFARI;
+                this.__internal__setState(this.HuntStates.HUNT_SAFARI);
             }
             return;
         }
@@ -501,15 +503,15 @@ class AutomationShiny
 
         if (hasDungeonTargets)
         {
-            this.__internal__state = this.HuntStates.HUNT_DUNGEON;
+            this.__internal__setState(this.HuntStates.HUNT_DUNGEON);
         }
         else if (hasSafariTargets)
         {
-            this.__internal__state = this.HuntStates.HUNT_SAFARI;
+            this.__internal__setState(this.HuntStates.HUNT_SAFARI);
         }
         else
         {
-            this.__internal__state = this.HuntStates.HUNT_ROUTE;
+            this.__internal__setState(this.HuntStates.HUNT_ROUTE);
         }
     }
 
@@ -524,7 +526,7 @@ class AutomationShiny
         if (!App.game?.keyItems?.hasKeyItem?.(KeyItemType.Dungeon_ticket))
         {
             this.__internal__debugLog("Dungeon ticket missing, falling back to route hunt.");
-            this.__internal__state = this.HuntStates.HUNT_ROUTE;
+            this.__internal__setState(this.HuntStates.HUNT_ROUTE);
             return;
         }
 
@@ -542,13 +544,13 @@ class AutomationShiny
 
         if (!this.__internal__currentDungeonTarget)
         {
-            this.__internal__state = this.HuntStates.HUNT_ROUTE;
+            this.__internal__setState(this.HuntStates.HUNT_ROUTE);
             return;
         }
 
         if (!this.__internal__canAffordCurrentDungeon())
         {
-            this.__internal__state = this.HuntStates.FARM_DUNGEON_TOKENS;
+            this.__internal__setState(this.HuntStates.FARM_DUNGEON_TOKENS);
             return;
         }
 
@@ -570,7 +572,7 @@ class AutomationShiny
         const safariTarget = this.__internal__findSafariWithMissingShiny();
         if (!safariTarget)
         {
-            this.__internal__state = this.HuntStates.HUNT_ROUTE;
+            this.__internal__setState(this.HuntStates.HUNT_ROUTE);
             return;
         }
 
@@ -578,7 +580,7 @@ class AutomationShiny
 
         if (!this.__internal__canAffordSafari())
         {
-            this.__internal__state = this.HuntStates.FARM_SAFARI_CURRENCY;
+            this.__internal__setState(this.HuntStates.FARM_SAFARI_CURRENCY);
             return;
         }
 
@@ -622,6 +624,76 @@ class AutomationShiny
         if (routeMode !== "auto")
         {
             this.__internal__moveToBestSafariCurrencyRoute(ball);
+        }
+    }
+
+    static __internal__setState(newState)
+    {
+        if (this.__internal__state === newState)
+        {
+            return;
+        }
+
+        const previousState = this.__internal__state;
+        this.__internal__state = newState;
+
+        if (previousState === this.HuntStates.FARM_SAFARI_CURRENCY)
+        {
+            this.__internal__disableQuestFocus();
+        }
+
+        if (newState === this.HuntStates.FARM_SAFARI_CURRENCY)
+        {
+            this.__internal__enableQuestFocus();
+        }
+    }
+
+    static __internal__enableQuestFocus()
+    {
+        if (!App.game?.quests?.isDailyQuestsUnlocked?.())
+        {
+            return;
+        }
+
+        if (!Automation.Focus)
+        {
+            return;
+        }
+
+        try
+        {
+            if (Automation.Focus.__internal__focusSelectElem)
+            {
+                Automation.Focus.__internal__focusSelectElem.value = "Quests";
+                Automation.Focus.__internal__focusOnChanged(false);
+            }
+
+            Automation.Menu.forceAutomationState(Automation.Focus.Settings.FeatureEnabled, true);
+        }
+        catch (error)
+        {
+            this.__internal__debugLog(`Failed to enable Focus->Quests: ${error}`);
+        }
+    }
+
+    static __internal__disableQuestFocus()
+    {
+        if (!Automation.Focus)
+        {
+            return;
+        }
+
+        try
+        {
+            const selected = Automation.Utils.LocalStorage.getValue(Automation.Focus.Settings.FocusedTopic);
+            if (selected === "Quests")
+            {
+                Automation.Menu.forceAutomationState(Automation.Focus.Settings.FeatureEnabled, false);
+            }
+        }
+        catch (error)
+        {
+            this.__internal__debugLog(`Failed to disable Focus->Quests: ${error}`);
         }
     }
 
