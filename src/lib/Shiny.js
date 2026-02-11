@@ -953,23 +953,21 @@ class AutomationShiny
             return GameConstants.Pokeball.Masterball;
         }
 
-        if (!App?.game?.pokeballs?.pokeballs)
+        if (!App?.game?.pokeballs)
         {
             return null;
         }
 
-        let bestBall = null;
-        let bestBonus = Number.NEGATIVE_INFINITY;
+        const normalBallPriority = [
+            GameConstants.Pokeball.Ultraball,
+            GameConstants.Pokeball.Greatball,
+            GameConstants.Pokeball.Pokeball
+        ];
 
-        for (const [ballIdRaw, ballData] of Object.entries(App.game.pokeballs.pokeballs))
+        for (const ballId of normalBallPriority)
         {
-            const ballId = parseInt(ballIdRaw, 10);
-            if (Number.isNaN(ballId))
-            {
-                continue;
-            }
-
-            if ((ballId === GameConstants.Pokeball.None) || (ballId === GameConstants.Pokeball.Masterball))
+            const ballData = App.game.pokeballs.pokeballs?.[ballId];
+            if (!ballData)
             {
                 continue;
             }
@@ -985,18 +983,10 @@ class AutomationShiny
                 continue;
             }
 
-            const catchBonus = (typeof App.game.pokeballs.getCatchBonus === "function")
-                ? App.game.pokeballs.getCatchBonus(ballId)
-                : ballId;
-
-            if ((catchBonus > bestBonus) || ((catchBonus === bestBonus) && ((bestBall === null) || (ballId > bestBall))))
-            {
-                bestBonus = catchBonus;
-                bestBall = ballId;
-            }
+            return ballId;
         }
 
-        return bestBall;
+        return null;
     }
 
     static __internal__getCurrentEnemyPokemon()
