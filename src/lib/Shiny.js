@@ -30,6 +30,8 @@ class AutomationShiny
             Automation.Utils.LocalStorage.setDefaultValue(this.Settings.SafariCurrencyFarmBall, GameConstants.Pokeball.Ultraball);
             Automation.Utils.LocalStorage.setDefaultValue(this.Settings.SafariCurrencyFarmFallbackBall, GameConstants.Pokeball.Greatball);
             Automation.Utils.LocalStorage.setDefaultValue(this.Settings.SafariCurrencyFarmRouteMode, "best");
+
+            this.__internal__buildMenu();
         }
         else if (initStep == Automation.InitSteps.Finalize)
         {
@@ -97,6 +99,112 @@ class AutomationShiny
     static __internal__state = this.HuntStates.HUNT_ROUTE;
     static __internal__currentDungeonTarget = null;
     static __internal__currentSafariTarget = null;
+    static __internal__container = null;
+
+    /**
+     * @brief Builds the menu
+     */
+    static __internal__buildMenu()
+    {
+        this.__internal__container = document.createElement("div");
+
+        const shinyTooltip = "Hunts uncaught shiny pokÃ©mon across routes, dungeons, and safari"
+                           + Automation.Menu.TooltipSeparator
+                           + "Automatically farms tokens or safari currency when needed";
+        const shinyButton =
+            Automation.Menu.addAutomationButton("Shiny hunt", this.Settings.FeatureEnabled, shinyTooltip, this.__internal__container);
+        shinyButton.addEventListener("click", this.toggleShinyHunt.bind(this), false);
+
+        Automation.Menu.addSeparator(this.__internal__container);
+        Automation.Menu.AutomationButtonsDiv.appendChild(this.__internal__container);
+
+        const shinySettingPanel = Automation.Menu.addSettingPanel(shinyButton.parentElement.parentElement);
+
+        const titleDiv = Automation.Menu.createTitleElement("Shiny hunt advanced settings");
+        titleDiv.style.marginBottom = "10px";
+        shinySettingPanel.appendChild(titleDiv);
+
+        const masterballTooltip = "Use Masterball on shiny encounters if available";
+        Automation.Menu.addLabeledAdvancedSettingsToggleButton("Use Masterball for shiny encounters",
+                                                               this.Settings.UseMasterball,
+                                                               masterballTooltip,
+                                                               shinySettingPanel);
+
+        const autoAdvanceTooltip = "Automatically move to the next route once the current one is shiny-complete";
+        Automation.Menu.addLabeledAdvancedSettingsToggleButton("Auto-advance routes",
+                                                               this.Settings.AutoAdvanceRoutes,
+                                                               autoAdvanceTooltip,
+                                                               shinySettingPanel);
+
+        const debugTooltip = "Logs shiny hunt state changes and fallback decisions in the console";
+        Automation.Menu.addLabeledAdvancedSettingsToggleButton("Enable debug telemetry",
+                                                               this.Settings.DebugTelemetry,
+                                                               debugTooltip,
+                                                               shinySettingPanel);
+
+        shinySettingPanel.appendChild(document.createElement("br"));
+
+        const tokenBallTooltip = "PokÃ©ball used while farming dungeon tokens";
+        shinySettingPanel.appendChild(
+            Automation.Menu.addPokeballList(this.Settings.DungeonTokenFarmBall,
+                                            "Dungeon token farm ball",
+                                            tokenBallTooltip));
+
+        const tokenFallbackTooltip = "Fallback pokÃ©ball used if the main ball is unavailable";
+        shinySettingPanel.appendChild(
+            Automation.Menu.addPokeballList(this.Settings.DungeonTokenFarmFallbackBall,
+                                            "Dungeon token fallback ball",
+                                            tokenFallbackTooltip));
+
+        shinySettingPanel.appendChild(
+            this.__internal__buildRouteModeDropdown(this.Settings.DungeonTokenFarmRouteMode,
+                                                    "Dungeon token farm route",
+                                                    "Select how routes are chosen while farming dungeon tokens"));
+
+        shinySettingPanel.appendChild(document.createElement("br"));
+
+        const safariBallTooltip = "PokÃ©ball used while farming safari currency";
+        shinySettingPanel.appendChild(
+            Automation.Menu.addPokeballList(this.Settings.SafariCurrencyFarmBall,
+                                            "Safari currency farm ball",
+                                            safariBallTooltip));
+
+        const safariFallbackTooltip = "Fallback pokÃ©ball used if the main ball is unavailable";
+        shinySettingPanel.appendChild(
+            Automation.Menu.addPokeballList(this.Settings.SafariCurrencyFarmFallbackBall,
+                                            "Safari currency fallback ball",
+                                            safariFallbackTooltip));
+
+        shinySettingPanel.appendChild(
+            this.__internal__buildRouteModeDropdown(this.Settings.SafariCurrencyFarmRouteMode,
+                                                    "Safari currency farm route",
+                                                    "Select how routes are chosen while farming safari currency"));
+    }
+
+    static __internal__buildRouteModeDropdown(settingId, label, tooltip)
+    {
+        const savedValue = Automation.Utils.LocalStorage.getValue(settingId) ?? "best";
+        const options = [
+            { value: "best", label: "Best route" },
+            { value: "auto", label: "Auto (no forced move)" }
+        ];
+
+        const selectOptions = options.map((option) =>
+            {
+                const elem = document.createElement("div");
+                elem.appendChild(document.createTextNode(option.label));
+                return { value: option.value, element: elem, selected: (option.value === savedValue) };
+            });
+
+        const dropdown = Automation.Menu.createDropdownListWithHtmlOptions(selectOptions, label, tooltip);
+        dropdown.onValueChange = function()
+        {
+            Automation.Utils.LocalStorage.setValue(settingId, dropdown.selectedValue);
+        };
+
+        dropdown.getElementsByTagName("button")[0].style.width = "180px";
+        return dropdown;
+    }
 
     static __internal__tick()
     {
