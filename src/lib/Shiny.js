@@ -722,6 +722,11 @@ class AutomationShiny
             .filter((entry) => entry.town && entry.dungeon)
             .sort((a, b) =>
                 {
+                    const isAPinkan = (a.name === "Pinkan Mountain");
+                    const isBPinkan = (b.name === "Pinkan Mountain");
+                    if (isAPinkan && !isBPinkan) return 1;
+                    if (!isAPinkan && isBPinkan) return -1;
+
                     if (a.town.region !== b.town.region) return a.town.region - b.town.region;
                     return a.name.localeCompare(b.name);
                 });
