@@ -39,6 +39,47 @@ class AutomationFocus
         }
     }
 
+    /**
+     * @brief Sets the selected focus topic in the dropdown
+     *
+     * @param {string} topicId: The functionality id to select
+     * @param {boolean} forceOff: Whether selecting a new topic should force-disable the current focus
+     *
+     * @returns True if the topic was found and selected, false otherwise
+     */
+    static setSelectedTopic(topicId, forceOff = true)
+    {
+        if (!this.__internal__focusSelectElem)
+        {
+            return false;
+        }
+
+        const optionFound = Array.from(this.__internal__focusSelectElem.options).some((option) => option.value === topicId);
+        if (!optionFound)
+        {
+            return false;
+        }
+
+        this.__internal__focusSelectElem.value = topicId;
+        this.__internal__focusOnChanged(forceOff);
+        return true;
+    }
+
+    /**
+     * @brief Gets the currently selected focus topic
+     *
+     * @returns The selected topic id, or null if the dropdown is not initialized yet
+     */
+    static getSelectedTopic()
+    {
+        if (!this.__internal__focusSelectElem)
+        {
+            return null;
+        }
+
+        return this.__internal__focusSelectElem.value;
+    }
+
     /******************************************************************************\
     |***    Focus specific members, should only be used by focus sub-classes    ***|
     \******************************************************************************/

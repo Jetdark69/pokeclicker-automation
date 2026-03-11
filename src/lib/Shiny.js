@@ -99,7 +99,6 @@ class AutomationShiny
     static __internal__filterBallType = null;
     static __internal__lastAutoAdvanceAt = 0;
     static __internal__state = this.HuntStates.HUNT_ROUTE;
-    static __internal__lastState = this.HuntStates.HUNT_ROUTE;
     static __internal__currentDungeonTarget = null;
     static __internal__currentSafariTarget = null;
     static __internal__container = null;
@@ -617,7 +616,13 @@ class AutomationShiny
             this.Settings.SafariCurrencyFarmBall,
             this.Settings.SafariCurrencyFarmFallbackBall);
 
-        Automation.Utils.Pokeball.catchEverythingWith(ball);
+        // If Focus->Quests is currently controlling captures, avoid fighting over the filter.
+        const isQuestFocusActive = (Automation.Utils.LocalStorage.getValue(Automation.Focus.Settings.FeatureEnabled) === "true")
+                                && (Automation.Focus.getSelectedTopic?.() === "Quests");
+        if (!isQuestFocusActive)
+        {
+            Automation.Utils.Pokeball.catchEverythingWith(ball);
+        }
 
         const routeMode = Automation.Utils.LocalStorage.getValue(this.Settings.SafariCurrencyFarmRouteMode);
         if (routeMode !== "auto")
@@ -661,11 +666,7 @@ class AutomationShiny
 
         try
         {
-            if (Automation.Focus.__internal__focusSelectElem)
-            {
-                Automation.Focus.__internal__focusSelectElem.value = "Quests";
-                Automation.Focus.__internal__focusOnChanged(false);
-            }
+            Automation.Focus.setSelectedTopic?.("Quests", false);
 
             Automation.Menu.forceAutomationState(Automation.Focus.Settings.FeatureEnabled, true);
         }
@@ -684,7 +685,7 @@ class AutomationShiny
 
         try
         {
-            const selected = Automation.Utils.LocalStorage.getValue(Automation.Focus.Settings.FocusedTopic);
+            const selected = Automation.Focus.getSelectedTopic?.() ?? Automation.Utils.LocalStorage.getValue(Automation.Focus.Settings.FocusedTopic);
             if (selected === "Quests")
             {
                 Automation.Menu.forceAutomationState(Automation.Focus.Settings.FeatureEnabled, false);
